@@ -151,4 +151,119 @@ describe('API Endpoints', () => {
       expect(response.body.count).toBeGreaterThanOrEqual(1);
     });
   });
+
+  describe('GET /api/todos - Filtering and Sorting', () => {
+    beforeEach(async () => {
+      await createTodo('Alpha Task');
+      const high = await createTodo('High Priority Task');
+      const withDate = await createTodo('Due Soon Task');
+      
+      // Set priorities
+      await request(app)
+        .put(`/api/todos/${high.id}`)
+        .send({ title: high.title, priority: 'High' });
+      
+      // Set due date
+      await request(app)
+        .put(`/api/todos/${withDate.id}`)
+        .send({ title: withDate.title, dueDate: '2026-12-31' });
+
+      // Complete one
+      await request(app).patch(`/api/todos/${high.id}/toggle`);
+    });
+
+    it('should filter by status=active', async () => {
+      const response = await request(app).get('/api/todos?status=active');
+      
+      expect(response.status).toBe(200);
+      expect(Array.isArray(response.body)).toBe(true);
+      expect(response.body.every((t) => !t.completed)).toBe(true);
+    });
+
+    it('should filter by status=completed', async () => {
+      const response = await request(app).get('/api/todos?status=completed');
+      
+      expect(response.status).toBe(200);
+      expect(Array.isArray(response.body)).toBe(true);
+      expect(response.body.every((t) => t.completed)).toBe(true);
+    });
+
+    it('should search by title', async () => {
+      const response = await request(app).get('/api/todos?search=Alpha');
+      
+      expect(response.status).toBe(200);
+      expect(response.body.length).toBeGreaterThanOrEqual(1);
+      expect(response.body.some((t) => t.title.includes('Alpha'))).toBe(true);
+    });
+
+    it('should search case-insensitively', async () => {
+      const response = await request(app).get('/api/todos?search=alpha');
+      
+      expect(response.status).toBe(200);
+      expect(response.body.length).toBeGreaterThanOrEqual(1);
+    });
+
+    it('should sort by createdAt descending', async () => {
+      const response = await request(app).get('/api/todos?sortBy=createdAt&order=desc');
+      
+      expect(response.status).toBe(200);
+      if (response.body.length > 1) {
+        const first = new Date(response.body[0].created_at);
+        const second = new Date(response.body[1].created_at);
+        expect(first.getTime()).toBeGreaterThanOrEqual(second.getTime());
+      }
+    });
+
+    it('should sort by createdAt ascending', async () => {
+      const response = await request(app).get('/api/todos?sortBy=createdAt&order=asc');
+      
+      expect(response.status).toBe(200);
+      if (response.body.length > 1) {
+        const first = new Date(response.body[0].created_at);
+        const second = new Date(response.body[1].created_at);
+        expect(first.getTime()).toBeLessThanOrEqual(second.getTime());
+      }
+    });
+
+    it('should sort by priority', async () => {
+      const response = await request(app).get('/api/todos?sortBy=priority&order=desc');
+      
+      expect(response.status).toBe(200);
+      const priorityOrder = { High: 3, Medium: 2, Low: 1 };
+      if (response.body.length > 1) {
+        const first = priorityOrder[response.body[0].priority];
+        const second = priorityOrder[response.body[1].priority];
+        expect(first).toBeGreaterThanOrEqual(second);
+      }
+    });
+
+    it('should sort by dueDate with nulls last in ascending order', async () => {
+      const response = await request(app).get('/api/todos?sortBy=dueDate&order=asc');
+      
+      expect(response.status).toBe(200);
+      // In SQL ORDER BY `due_date IS NULL, due_date ASC`, items with NULL dates 
+      // sort after items with actual dates (nulls last) because IS NULL=1 sorts after IS NULL=0
+      const nullIndex = response.body.findIndex((t) => t.due_date === null);
+      const dateIndex = response.body.findIndex((t) => t.due_date !== null);
+      if (nullIndex !== -1 && dateIndex !== -1) {
+        // Nulls should come after dates in ascending order
+        expect(dateIndex).toBeLessThan(nullIndex);
+      }
+    });
+
+    it('should combine status filter with search', async () => {
+      const response = await request(app).get('/api/todos?status=active&search=Alpha');
+      
+      expect(response.status).toBe(200);
+      expect(response.body.every((t) => !t.completed)).toBe(true);
+      expect(response.body.every((t) => t.title.toLowerCase().includes('alpha'))).toBe(true);
+    });
+
+    it('should handle empty search results', async () => {
+      const response = await request(app).get('/api/todos?search=NONEXISTENT12345');
+      
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual([]);
+    });
+  });
 });

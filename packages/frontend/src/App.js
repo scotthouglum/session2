@@ -352,7 +352,7 @@ function App() {
                       fullWidth
                       label="Due Date"
                       type="date"
-                      InputLabelProps={{ shrink: true }}
+                      slotProps={{ inputLabel: { shrink: true } }}
                       value={form.dueDate}
                       onChange={(event) => handleFormChange('dueDate', event.target.value)}
                     />
@@ -385,12 +385,12 @@ function App() {
 
           <Card>
             <CardContent>
-              <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems={{ xs: 'stretch', md: 'center' }}>
+              <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} sx={{ alignItems: { xs: 'stretch', md: 'center' } }}>
                 <TextField
                   label="Search by title"
                   value={searchText}
                   onChange={(event) => setSearchText(event.target.value)}
-                  InputProps={{ startAdornment: <SearchIcon sx={{ mr: 1, color: 'text.secondary' }} /> }}
+                  slotProps={{ input: { startAdornment: <SearchIcon sx={{ mr: 1, color: 'text.secondary' }} /> } }}
                   sx={{ flex: 1 }}
                 />
 
@@ -463,8 +463,8 @@ function App() {
                   {todos.map((todo) => (
                     <Card key={todo.id} variant="outlined" sx={{ borderLeft: isOverdue(todo) ? '4px solid #D32F2F' : '4px solid #1565C0' }}>
                       <CardContent>
-                        <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} justifyContent="space-between" alignItems={{ xs: 'flex-start', md: 'center' }}>
-                          <Stack direction="row" spacing={1.5} alignItems="flex-start" sx={{ flex: 1 }}>
+                        <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} sx={{ justifyContent: 'space-between', alignItems: { xs: 'flex-start', md: 'center' } }}>
+                          <Stack direction="row" spacing={1.5} sx={{ alignItems: 'flex-start', flex: 1 }}>
                             <Checkbox
                               checked={todo.completed}
                               onChange={() => handleToggleTodo(todo.id)}
@@ -529,7 +529,7 @@ function App() {
             <TextField
               label="Due Date"
               type="date"
-              InputLabelProps={{ shrink: true }}
+              slotProps={{ inputLabel: { shrink: true } }}
               value={editForm.dueDate}
               onChange={(event) => handleFormChange('dueDate', event.target.value, 'edit')}
             />
