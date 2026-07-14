@@ -45,7 +45,7 @@ The project follows a monorepo architecture with the following structure:
 ## Getting Started
 
 ### Prerequisites
-- Node.js (v24 or higher)
+- Node.js (v20 or higher)
 - npm (v7 or higher)
 - Playwright browsers (installed automatically with first E2E test run)
 

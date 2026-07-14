@@ -4,7 +4,7 @@
   "description": "Node.js backend with in-memory database",
   "main": "src/index.js",
   "engines": {
-    "node": ">=24"
+    "node": ">=20"
   },
   "scripts": {
     "start": "nodemon src/index.js",
